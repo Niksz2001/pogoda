@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pogoda i Fazy Księżyca — Przybiernów</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-top: #3c8ce7;
+      --bg-bottom: #00eaff;
+      --accent: rgba(255,255,255,0.9);
+      --ui-bg: rgba(255,255,255,0.08);
+      --hud-color: #7affc6;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      font-family: 'Poppins', sans-serif;
+      color: var(--accent);
+      background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+      overflow-x: hidden;
+      transition: background 1.5s ease;
+      padding-top: 80px;
+    }
+    body.night { --bg-top: #061025; --bg-bottom: #02060a; }
+    #hud {
+      position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+      gap: 10px; z-index: 10; background: rgba(0,0,0,0.3);
+      padding: 10px 16px; border-radius: 12px; backdrop-filter: blur(6px);
+      color: var(--hud-color); font-weight: 600; font-size: 0.9rem;
+    }
+    #hud input {padding:6px 10px;border-radius:8px;border:none;background:rgba(255,255,255,0.15);color:white;}
+    #hud button {padding:6px 12px;border:none;border-radius:8px;background:rgba(0,255,170,0.3);color:white;font-weight:600;cursor:pointer;}
+    .card {
+      width: min(90vw, 900px);
+      background: rgba(255,255,255,0.08);
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      padding: 24px;
+      display: flex; flex-direction: row; flex-wrap: wrap; justify-content: space-between;
+      gap: 20px;
+    }
+    .main {flex: 1 1 300px;}
+    .place {font-size: 1.3rem; font-weight: 600;}
+    .temp {font-size: 3.5rem; font-weight: 700; margin: 8px 0;}
+    .desc {font-size: 1.1rem; margin-bottom: 10px;}
+    .meta div {background: var(--ui-bg); padding: 8px 10px; border-radius: 10px; margin: 4px; display: inline-block;}
+    .side {flex: 1 1 200px; text-align: center;}
+    .icon {width: 120px; height: 120px; margin: auto; background-size: contain; background-repeat: no-repeat;}
+    .forecast {display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px;}
+    .forecast-day {background: rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 12px; text-align: center; width: 100px;}
+    .moon-info, .nameday-info {
+      margin-top: 20px; text-align: center; font-size: 1rem; background: rgba(255,255,255,0.08);
+      padding: 10px 16px; border-radius: 10px; max-width: 500px;
+    }
+    @media(max-width:600px){
+      #hud{font-size:0.8rem;padding:8px;flex-direction:column;}
+      .card{flex-direction:column;align-items:center;}
+      .temp{font-size:2.8rem;}
+      .forecast-day{width:80px;font-size:0.8rem;}
+    }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <input type="text" id="cityInput" placeholder="Miasto..." />
+    <button id="changeCity">Zmień</button>
+  </div>
+
+  <div class="card">
+    <div class="main">
+      <div id="place" class="place">Przybiernów, woj. zachodniopomorskie</div>
+      <div id="temp" class="temp">—°C</div>
+      <div id="desc" class="desc">Ładowanie...</div>
+      <div class="meta">
+        <div id="feels">—</div><div id="humidity">—</div><div id="wind">—</div><div id="sun">—</div>
+      </div>
+    </div>
+    <div class="side">
+      <div id="icon" class="icon"></div>
+      <div>Aktualizacja: <span id="upd">—</span></div>
+    </div>
+  </div>
+
+  <div id="forecast" class="forecast"></div>
+  <div class="moon-info" id="moonPhase"></div>
+  <div class="nameday-info" id="namedays"></div>
+
+  <script>
+    const API_KEY = "79ce6953d167e12a2d7bcada04a1f25c";
+    let LAT = 53.746, LON = 14.777; // Przybiernów
+    let cityName = "Przybiernów, woj. zachodniopomorskie";
+    const el = id => document.getElementById(id);
+    const iconMap = code => `https://openweathermap.org/img/wn/${code}@4x.png`;
+
+    function applySkyGradient(now, sunrise, sunset){
+      const night = now < sunrise || now > sunset;
+      document.body.classList.toggle("night", night);
+    }
+
+    function fetchWeather(){
+      fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&appid=${API_KEY}&units=metric&lang=pl`)
+      .then(r=>r.json()).then(d=>{
+        if(d.cod!==200) throw new Error();
+        el('place').textContent = d.name || cityName;
+        el('temp').textContent = `${Math.round(d.main.temp)}°C`;
+        el('desc').textContent = d.weather[0].description;
+        el('feels').textContent = `Odczuwalna: ${Math.round(d.main.feels_like)}°C`;
+        el('humidity').textContent = `Wilgotność: ${d.main.humidity}%`;
+        el('wind').textContent = `Wiatr: ${Math.round(d.wind.speed)} m/s`;
+        el('icon').style.backgroundImage = `url(${iconMap(d.weather[0].icon)})`;
+        const sunrise = d.sys.sunrise*1000, sunset = d.sys.sunset*1000, now = d.dt*1000;
+        el('sun').textContent = `Wschód: ${new Date(sunrise).toLocaleTimeString('pl-PL')}, Zachód: ${new Date(sunset).toLocaleTimeString('pl-PL')}`;
+        el('upd').textContent = new Date(now).toLocaleTimeString('pl-PL');
+        applySkyGradient(now,sunrise,sunset);
+      });
+    }
+
+    function fetchForecast(){
+      fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${LAT}&lon=${LON}&appid=${API_KEY}&units=metric&lang=pl`)
+      .then(r=>r.json()).then(data=>{
+        const wrap = el("forecast"); wrap.innerHTML="";
+        const days = {};
+        data.list.forEach(entry => {
+          const d = new Date(entry.dt * 1000);
+          const name = d.toLocaleDateString("pl-PL", { weekday: "long" });
+          if (!days[name]) days[name] = entry;
+        });
+        Object.keys(days).slice(0,5).forEach(day=>{
+          const e = days[day];
+          wrap.innerHTML += `<div class="forecast-day"><div>${day.charAt(0).toUpperCase()+day.slice(1)}</div><img src="https://openweathermap.org/img/wn/${e.weather[0].icon}.png"/><div>${Math.round(e.main.temp)}°C</div></div>`;
+        });
+      });
+    }
+
+    async function changeCity(){
+      const q = el("cityInput").value.trim();
+      if(!q) return;
+      try {
+        const res = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(q)}&limit=1&appid=${API_KEY}`);
+        const data = await res.json();
+        if(!data.length) return alert("Nie znaleziono lokalizacji.");
+        LAT = data[0].lat; LON = data[0].lon; cityName = data[0].name;
+        fetchWeather(); fetchForecast(); updateExtras();
+      } catch { alert("Błąd wyszukiwania."); }
+    }
+
+    function moonPhase(date=new Date()){
+      const lp = 2551443; // lunar period in seconds
+      const new_moon = new Date(1970, 0, 7, 20, 35, 0);
+      const phase = ((date.getTime() - new_moon.getTime())/1000) % lp;
+      const index = Math.floor((phase / lp) * 8 + 0.5) % 8;
+      const names = ["🌑 Nów", "🌒 Pierwszy sierp", "🌓 I kwadra", "🌔 Gibujący", "🌕 Pełnia", "🌖 Ubywający", "🌗 III kwadra", "🌘 Stary sierp"];
+      return names[index];
+    }
+
+    function nameDays(){
+      const namedays = {
+        "01-01":["Mieczysław","Mieszko"],
+        "10-11":["Lena","Leon","Wiktor","Zofia"],
+        "25-12":["Eugenia","Piotr","Anastazja"],
+        "10-10":["Franciszek","Paulina","Daniel"],
+        "11-11":["Marcin","Bartłomiej","Teodor"]
+      };
+      const today = new Date();
+      const key = today.toISOString().slice(5,10);
+      const list = namedays[key] || ["brak danych"];
+      return `🎉 Imieniny obchodzą: ${list.join(", ")}`;
+    }
+
+    function updateExtras(){
+      el("moonPhase").textContent = `🌙 Faza Księżyca: ${moonPhase()}`;
+      el("namedays").textContent = nameDays();
+    }
+
+    el("changeCity").addEventListener("click", changeCity);
+    el("cityInput").addEventListener("keydown", e=>{if(e.key==="Enter"){e.preventDefault();changeCity();}});
+
+    fetchWeather(); fetchForecast(); updateExtras();
+  </script>
+</body>
+</html>
