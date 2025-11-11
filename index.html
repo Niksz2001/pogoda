@@ -191,35 +191,7 @@
   <div id="visitCounter" style="margin-top:40px; font-size:0.9rem; opacity:0.8;">
     Łączna liczba odwiedzin: <span id="counterValue">...</span>
   </div>
-
-  <script>
-    (async () => {
-      const namespace = 'pogoda-przybiernow';
-      const key = 'total-visits'; // stały klucz
-      const apiKey = 'ut_WKe5xaQfgePhAqV6MljiWOb78sGKjXDAduhAMrWy'; // <-- wstaw tu swój klucz, albo zostaw by użyć publicznego endpointu
-      const base = `https://api.countapi.xyz`;
-      const url = (apiKey && apiKey !== 'ut_WKe5xaQfgePhAqV6MljiWOb78sGKjXDAduhAMrWy')
-        ? `${base}/hit/${encodeURIComponent(namespace)}/${encodeURIComponent(key)}?api_key=${encodeURIComponent(apiKey)}`
-        : `${base}/hit/${encodeURIComponent(namespace)}/${encodeURIComponent(key)}`;
-
-      try {
-        const res = await fetch(url);
-        console.log('CountAPI status:', res.status, res.statusText);
-        const data = await res.json();
-        console.log('CountAPI response:', data);
-        if (res.ok && typeof data.value !== 'undefined') {
-          document.getElementById('counterValue').textContent = data.value;
-        } else if (data.error) {
-          document.getElementById('counterValue').textContent = 'błąd: ' + data.error;
-        } else {
-          document.getElementById('counterValue').textContent = 'błąd';
-        }
-      } catch (e) {
-        document.getElementById('counterValue').textContent = 'błąd';
-        console.error('Błąd licznika (fetch):', e);
-      }
-    })();
-  </script>
+  
 </body>
 </html>
 
