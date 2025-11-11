@@ -185,5 +185,30 @@
 
     fetchWeather(); fetchForecast(); updateExtras();
   </script>
+
+  
+  <div id="visitCounter" style="margin-top:40px; font-size:0.9rem; opacity:0.8;">
+    Łączna liczba odwiedzin: <span id="counterValue">...</span>
+  </div>
+
+  <script>
+    // --- Globalny licznik odwiedzin z CountAPI + klucz API ---
+    (async () => {
+      const namespace = 'pogoda-przybiernow';
+      const key = 'total-visits'; // stały klucz, nie resetuje się codziennie
+      const apiKey = 'ut_WKe5xaQfgePhAqV6MljiWOb78sGKjXDAduhAMrWy'; // <-- wstaw tu swój klucz API z CountAPI
+      const url = `https://api.countapi.xyz/hit/${namespace}/${key}?api_key=${apiKey}`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        document.getElementById('counterValue').textContent = data.value;
+      } catch (e) {
+        document.getElementById('counterValue').textContent = 'błąd';
+        console.error('Błąd licznika:', e);
+      }
+    })();
+  </script>
 </body>
 </html>
+
