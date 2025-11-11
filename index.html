@@ -198,7 +198,7 @@
       const key = 'total-visits'; // stały klucz
       const apiKey = 'ut_WKe5xaQfgePhAqV6MljiWOb78sGKjXDAduhAMrWy'; // <-- wstaw tu swój klucz, albo zostaw by użyć publicznego endpointu
       const base = `https://api.countapi.xyz`;
-      const url = (apiKey && apiKey !== 'TWOJ_KLUCZ_API')
+      const url = (apiKey && apiKey !== 'ut_WKe5xaQfgePhAqV6MljiWOb78sGKjXDAduhAMrWy')
         ? `${base}/hit/${encodeURIComponent(namespace)}/${encodeURIComponent(key)}?api_key=${encodeURIComponent(apiKey)}`
         : `${base}/hit/${encodeURIComponent(namespace)}/${encodeURIComponent(key)}`;
 
